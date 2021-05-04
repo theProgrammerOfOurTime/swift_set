@@ -96,7 +96,7 @@ void swift_set<Item>::resize(int maxNumberOfItem)
 	return;
 }
 
-//возвращает количество зарезервированной памяти
+//возвращает количество элементов, для которых зарезервирована память
 template <class Item>
 int swift_set<Item>::capacity()
 {
@@ -183,7 +183,7 @@ void swift_set<Item>::rehash(bool flag)
 template <class Item>
 int swift_set<Item>::hash_function(Item object)
 {
-	object = abs(object);//уменьшает кол-во коллизий
+	object = abs(object);
 	int hash = 1;
 	while (object != 0)
 	{
