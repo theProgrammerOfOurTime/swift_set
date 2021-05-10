@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <iostream>
 
 template<class Item>
@@ -96,7 +96,7 @@ void swift_set<Item>::resize(int maxNumberOfItem)
 	return;
 }
 
-//возвращает количество элементов, для которых зарезервирована память
+//возвращает количество зарезервированной памяти
 template <class Item>
 int swift_set<Item>::capacity()
 {
@@ -183,12 +183,11 @@ void swift_set<Item>::rehash(bool flag)
 template <class Item>
 int swift_set<Item>::hash_function(Item object)
 {
-	object = abs(object);
 	int hash = 1;
-	while (object != 0)
+	while (object > 0)
 	{
-		hash += (object % 100) * hash;
-		object = (object * 2 - object % 100) / 100;
+		hash += (object % 1000) * hash;
+		object = (object - object % 1000) / 100;
 	}
 	return hash % maxNumberOfItem;
 }
@@ -230,18 +229,22 @@ bool swift_set<Item>::find(Item element)
 template <class Item>
 void swift_set<Item>::insert(Item element)
 {
-	if (find(element)) { return; }
-	numberOfItems++;
 	int indexItem = abs(hash_function(element));
-	if (listItems[indexItem].state == false)
+	if (listItems[indexItem].state == true)
+	{
+		List <Item>* linkNode = &(listItems[indexItem]);
+		do
+		{
+			if (linkNode->item == element) { return; }
+		} while (linkNode->next != nullptr && (linkNode = linkNode->next));
+		listItems[indexItem].next = new List <Item>(element, listItems[indexItem].next);
+	}
+	else
 	{
 		listItems[indexItem].state = true;
 		listItems[indexItem].item = element;
 	}
-	else
-	{
-		listItems[indexItem].next = new List <Item>(element, listItems[indexItem].next);
-	}
+	numberOfItems++;
 	if (numberOfItems + 10 > maxNumberOfItem) { rehash(true); }
 	return;
 }
@@ -250,32 +253,36 @@ void swift_set<Item>::insert(Item element)
 template <class Item>
 void swift_set<Item>::erase(Item element)
 {
-	if (!(find(element))) { return; }
-	numberOfItems--;
 	int indexItem = abs(hash_function(element));
-	List <Item>* node = &(listItems[indexItem]);
-	if (node->item == element)
+	if (listItems[indexItem].state == true) //под одним индексом может лежать не один элемент
 	{
-		if (node->next == nullptr) { listItems[indexItem].state = false; }
-		else { listItems[indexItem] = *(node->next); }
-	}
-	else
-	{
-		do
+		if (listItems[indexItem].item == element)
 		{
-			if (node->next == nullptr)
+			if (listItems[indexItem].next == nullptr) { listItems[indexItem].state = false; }
+			else { listItems[indexItem] = *(listItems[indexItem].next); }
+		}
+		else
+		{
+			List <Item>* linkNode = &(listItems[indexItem]);
+			do
 			{
-				delete node;
-				break;
-			}
-			if (node->next->item == element)
-			{
-				List <Item>* tempLink = node->next;
-				node->next = node->next->next;
-				delete tempLink;
-				break;
-			}
-		} while (node->next != nullptr && (node = node->next));
+				if (linkNode->item == element)
+				{
+					delete linkNode;
+					break;
+				}
+				if (linkNode->next == nullptr) { return; }
+				if (linkNode->next->item == element)
+				{
+					List <Item>* tempLink = linkNode->next;
+					linkNode->next = linkNode->next->next;
+					delete tempLink;
+					break;
+				}
+			} while (linkNode->next != nullptr && (linkNode = linkNode->next));
+		}
+		numberOfItems--;
+		if (numberOfItems + 10 < maxNumberOfItem / 2 && maxNumberOfItem > 100) { rehash(false); }
 	}
-	if (numberOfItems + 10 < maxNumberOfItem / 2 && maxNumberOfItem > 100) { rehash(false); }
+	return;
 }
